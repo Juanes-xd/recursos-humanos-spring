@@ -9,4 +9,5 @@ public interface IEmpleadoService {
     public Empleado getEmpleadoById(Integer id);
     public Empleado saveEmpleado(Empleado empleado);
     public void deleteEmpleado(Integer id);
+
 }

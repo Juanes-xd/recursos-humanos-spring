@@ -31,4 +31,6 @@ public class EmpleadoService implements IEmpleadoService{
     public void deleteEmpleado(Integer id) {
         empleadoRepository.deleteById(id);
     }
+
+
 }
