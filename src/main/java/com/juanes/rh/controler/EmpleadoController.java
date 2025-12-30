@@ -1,13 +1,16 @@
 package com.juanes.rh.controler;
 
+import com.juanes.rh.exception.ResourceNoFound;
 import com.juanes.rh.modelos.Empleado;
 import com.juanes.rh.service.IEmpleadoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("rh-app")
@@ -33,29 +36,39 @@ public class EmpleadoController {
     }
 
     @GetMapping("/empleados/{id}")
-    public Empleado getEmpleadoById(@PathVariable Integer id) {
+    public ResponseEntity<Empleado> getEmpleadoById(@PathVariable Integer id) {
         logger.info("Fetching empleado with id: " + id);
-        return empleadoService.getEmpleadoById(id);
+        Empleado empleado = empleadoService.getEmpleadoById(id);
+        if (empleado == null) {
+            throw new ResourceNoFound("Empleado with id " + id + " not found.");
+        }
+        return ResponseEntity.ok(empleado);
     }
 
     @PutMapping("/empleados/{id}")
-    public Empleado updateEmpleado(@PathVariable Integer id, @RequestBody Empleado empleadoDetails) {
+    public ResponseEntity<Empleado> updateEmpleado(@PathVariable Integer id, @RequestBody Empleado empleadoDetails) {
         Empleado empleado = empleadoService.getEmpleadoById(id);
         if (empleado != null) {
             empleado.setNombre(empleadoDetails.getNombre());
             empleado.setDepartamento(empleadoDetails.getDepartamento());
             empleado.setSalario(empleadoDetails.getSalario());
             logger.info("Updating empleado with id: " + id + " to new values: " + empleado.toString());
-            return empleadoService.saveEmpleado(empleado);
+            empleadoService.saveEmpleado(empleado);
+            return ResponseEntity.ok(empleado);
         } else {
-            logger.warn("Empleado with id " + id + " not found for update.");
-            return null;
+            throw new ResourceNoFound("Empleado with id " + id + " not found.");
         }
     }
 
     @DeleteMapping("/empleados/{id}")
-    public void deleteEmpleado(@PathVariable Integer id) {
-        logger.info("Deleting empleado with id: " + id);
-        empleadoService.deleteEmpleado(id);
+    public ResponseEntity<Map<String, Boolean>> deleteEmpleado(@PathVariable Integer id) {
+        Empleado empleado = empleadoService.getEmpleadoById(id);
+        if (empleado != null) {
+            empleadoService.deleteEmpleado(id);
+            logger.info("Deleted empleado with id: " + id);
+            return ResponseEntity.ok(Map.of("deleted", Boolean.TRUE));
+        } else {
+            throw new ResourceNoFound("Empleado with id " + id + " not found.");
+        }
     }
 }
